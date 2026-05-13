@@ -1,0 +1,7 @@
+# Keeps generated dependencies and build output out of source control.
+node_modules/
+dist/
+
+# Local environment files.
+.env
+.env.*
