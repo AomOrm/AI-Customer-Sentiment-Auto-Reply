@@ -2,11 +2,9 @@
 import { useState } from 'react';
 import { I } from '../components/icons/Icons.jsx';
 import DistRow from '../components/common/DistRow.jsx';
-import FilterPill from '../components/common/FilterPill.jsx';
 import StatCard from '../components/common/StatCard.jsx';
 
 export default function DashboardPage({ approved, setApproved, onExport }) {
-  const [filter, setFilter] = useState('all');
   const [range, setRange] = useState('7d');
 
   const total = approved.length;
@@ -25,9 +23,30 @@ export default function DashboardPage({ approved, setApproved, onExport }) {
 
   const maxBar = Math.max(...weekly.map((w) => w.pos + w.neu + w.neg));
 
-  const filtered = filter === 'all' ? approved : approved.filter((a) => a.sentiment === filter);
-
   const removeRow = (id) => setApproved((prev) => prev.filter((a) => a.id !== id));
+
+  const exportCsv = () => {
+    const escapeCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const headers = ['date', 'comment', 'sentiment', 'reply'];
+    const rows = approved.map((row) => [
+      row.date,
+      row.comment,
+      row.sentiment,
+      row.reply,
+    ]);
+    const csv = [headers, ...rows].map((row) => row.map(escapeCell).join(',')).join('\r\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `siamreply-approved-replies-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    onExport?.();
+  };
 
   return (
     <div className="flex flex-col gap-6 fadeUp">
@@ -40,8 +59,7 @@ export default function DashboardPage({ approved, setApproved, onExport }) {
           })}
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn-ghost flex items-center gap-2 text-[13px]"><I.Filter className="w-4 h-4" /> ตัวกรอง</button>
-          <button className="btn-primary flex items-center gap-2 text-[13px]" onClick={onExport}><I.Download className="w-4 h-4" /> Export CSV</button>
+          <button className="btn-primary flex items-center gap-2 text-[13px]" onClick={exportCsv} disabled={!approved.length}><I.Download className="w-4 h-4" /> Export CSV</button>
         </div>
       </div>
 
@@ -114,12 +132,6 @@ export default function DashboardPage({ approved, setApproved, onExport }) {
             <div className="text-[11px] font-mono text-[var(--ink-muted)] uppercase tracking-widest">approved replies</div>
             <div className="font-semibold text-[15px] mt-0.5">คำตอบที่ส่งไปแล้ว</div>
           </div>
-          <div className="flex items-center gap-2">
-            <FilterPill active={filter === 'all'} onClick={() => setFilter('all')} label="ทั้งหมด" count={approved.length} />
-            <FilterPill active={filter === 'positive'} onClick={() => setFilter('positive')} label="บวก" count={counts.positive} dot="var(--green)" />
-            <FilterPill active={filter === 'negative'} onClick={() => setFilter('negative')} label="ลบ" count={counts.negative} dot="var(--red)" />
-            <FilterPill active={filter === 'neutral'} onClick={() => setFilter('neutral')} label="กลาง" count={counts.neutral} dot="var(--amber)" />
-          </div>
         </div>
         <div className="overflow-x-auto nice-scroll">
           <table className="tbl">
@@ -133,7 +145,7 @@ export default function DashboardPage({ approved, setApproved, onExport }) {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row) => {
+              {approved.map((row) => {
                 const sm = { positive: { c: 'badge-pos', l: 'บวก' }, negative: { c: 'badge-neg', l: 'ลบ' }, neutral: { c: 'badge-neu', l: 'กลาง' } }[row.sentiment];
                 return (
                   <tr key={row.id}>
@@ -147,14 +159,14 @@ export default function DashboardPage({ approved, setApproved, onExport }) {
                   </tr>);
 
               })}
-              {filtered.length === 0 &&
-              <tr><td colSpan="5" className="text-center text-[var(--ink-muted)] py-12">ยังไม่มีข้อมูลในตัวกรองนี้</td></tr>
+              {approved.length === 0 &&
+              <tr><td colSpan="5" className="text-center text-[var(--ink-muted)] py-12">ยังไม่มีข้อมูล</td></tr>
               }
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--line)] text-[12px] text-[var(--ink-muted)]">
-          <div>แสดง {filtered.length} จาก {approved.length} รายการ</div>
+          <div>แสดง {approved.length} รายการ</div>
           <div className="flex items-center gap-2">
             <button className="btn-ghost text-[12px] py-1.5">ก่อนหน้า</button>
             <span className="font-mono">1 / 1</span>

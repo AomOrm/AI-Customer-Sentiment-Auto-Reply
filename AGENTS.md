@@ -31,5 +31,7 @@ The npm scripts call Vite through `node ./node_modules/vite/bin/vite.js` to avoi
 ## UI Notes
 
 - The app shell intentionally has no owner/profile block, no top-right search field, and no notification bell.
+- The dashboard intentionally has no filter controls; approved replies are shown as a complete list.
+- The dashboard `Export CSV` button must create and download a real CSV file from the current approved replies.
 - Keep each major UI section in a named component or page file.
 - Add a short purpose comment at the top of new source files.
