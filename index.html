@@ -12,5 +12,26 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Lets VS Code Live Server open the built app from the project root.
+      window.setTimeout(function () {
+        var root = document.getElementById('root');
+        var isBuiltPage = window.location.pathname.replace(/\\/g, '/').includes('/dist/');
+
+        if (!root || root.childElementCount || isBuiltPage) {
+          return;
+        }
+
+        var css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = './dist/assets/index.css';
+        document.head.appendChild(css);
+
+        var app = document.createElement('script');
+        app.type = 'module';
+        app.src = './dist/assets/app.js';
+        document.body.appendChild(app);
+      }, 150);
+    </script>
   </body>
 </html>
